@@ -4,6 +4,8 @@ import plotly.express as px
 import plotly.graph_objects as go
 import pandas as pd
 import numpy as np
+import sqlite3
+import os
 
 # -------------------------------------------------------------
 # Color Theme & Styling (SaaS Redesign)
@@ -22,46 +24,48 @@ THEME = {
 }
 
 # -------------------------------------------------------------
-# Data Loading & Preprocessing
+# Data Loading & Preprocessing (SQLite DB)
 # -------------------------------------------------------------
-print("Loading and aggregating data for SaaS Dashboard...")
-cols_to_use = [
-    'City', 'Datetime', 'US_AQI', 'PM2_5_ugm3', 'Rain_mm', 
-    'Wind_Speed_10m_kmh', 'Temp_2m_C', 'Festival_Period', 'Crop_Burning_Season', 'Season'
-]
-metro_cities = ['Delhi', 'Mumbai', 'Bengaluru', 'Chennai', 'Kolkata', 'Hyderabad', 'Ahmedabad']
+print("Loading data for SaaS Dashboard...")
+DB_PATH = 'air_quality.db'
+CSV_PATH = 'INDIA_AQI_COMPLETE_20251126.csv'
+DEFAULT_METRO_CITIES = ['Delhi', 'Mumbai', 'Bengaluru', 'Chennai', 'Kolkata', 'Hyderabad', 'Ahmedabad']
+
+def get_aqi_category(aqi):
+    if aqi <= 50: return 'Good'
+    elif aqi <= 100: return 'Moderate'
+    elif aqi <= 200: return 'Poor'
+    else: return 'Severe'
 
 try:
-    df = pd.read_csv('INDIA_AQI_COMPLETE_20251126.csv', usecols=cols_to_use)
-    df_metro = df[df['City'].isin(metro_cities)].copy()
-    
-    df_metro['Datetime'] = pd.to_datetime(df_metro['Datetime'])
-    df_metro['Date'] = df_metro['Datetime'].dt.date
-    df_metro['Month'] = df_metro['Datetime'].dt.to_period('M').dt.to_timestamp()
-    df_metro['Year'] = df_metro['Datetime'].dt.year
-    
-    # Aggregation
-    df_daily = df_metro.groupby(['City', 'Date', 'Month', 'Year', 'Season']).agg({
-        'US_AQI': 'mean',
-        'PM2_5_ugm3': 'mean',
-        'Rain_mm': 'sum',
-        'Wind_Speed_10m_kmh': 'mean',
-        'Temp_2m_C': 'mean',
-        'Festival_Period': 'max',
-        'Crop_Burning_Season': 'max'
-    }).reset_index()
-    
-    def get_aqi_category(aqi):
-        if aqi <= 50: return 'Good'
-        elif aqi <= 100: return 'Moderate'
-        elif aqi <= 200: return 'Poor'
-        else: return 'Severe'
-        
+    if os.path.exists(DB_PATH):
+        print(f"Loading dataset from SQLite database '{DB_PATH}'...")
+        conn = sqlite3.connect(DB_PATH)
+        df_daily = pd.read_sql_query("SELECT * FROM daily_aqi", conn)
+        conn.close()
+        df_daily['Date'] = pd.to_datetime(df_daily['Date']).dt.date
+        df_daily['Month'] = pd.to_datetime(df_daily['Month'])
+    elif os.path.exists(CSV_PATH):
+        print(f"Loading raw CSV '{CSV_PATH}' and building SQLite database...")
+        from create_db import create_database
+        create_database(CSV_PATH, DB_PATH)
+        conn = sqlite3.connect(DB_PATH)
+        df_daily = pd.read_sql_query("SELECT * FROM daily_aqi", conn)
+        conn.close()
+        df_daily['Date'] = pd.to_datetime(df_daily['Date']).dt.date
+        df_daily['Month'] = pd.to_datetime(df_daily['Month'])
+    else:
+        raise FileNotFoundError("Neither 'air_quality.db' nor 'INDIA_AQI_COMPLETE_20251126.csv' was found.")
+
     df_daily['AQI_Category'] = df_daily['US_AQI'].apply(get_aqi_category)
-    print("Data loaded successfully.")
+    metro_cities = sorted(df_daily['City'].unique()) if not df_daily.empty else DEFAULT_METRO_CITIES
+    print(f"Data loaded successfully ({len(df_daily):,} rows).")
 except Exception as e:
     print(f"Error loading data: {e}")
     df_daily = pd.DataFrame()
+    metro_cities = DEFAULT_METRO_CITIES
+
+
 
 # -------------------------------------------------------------
 # Dash App Initialization
