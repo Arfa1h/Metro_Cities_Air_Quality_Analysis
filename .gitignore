@@ -1,0 +1,24 @@
+# Large Dataset files (>100MB limit for GitHub)
+*.csv
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+ENV/
+
+# Jupyter Notebook Checkpoints
+.ipynb_checkpoints
+
+# VS Code / IDE
+.vscode/
+.idea/
+*.swp
+
+# OS generated files
+.DS_Store
+Thumbs.db
