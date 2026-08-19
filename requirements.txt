@@ -1,4 +1,4 @@
-# Core Data Processing & Analysis
+# Core Data Processing & Analysis (sqlite3 is built into Python stdlib)
 pandas>=2.0.0
 numpy>=1.24.0
 
@@ -7,6 +7,9 @@ dash>=2.14.0
 plotly>=5.18.0
 matplotlib>=3.8.0
 seaborn>=0.13.0
+
+# Web Server for Production Deployment (Render, Heroku, AWS, Railway)
+gunicorn>=21.0.0
 
 # Jupyter Notebook Utilities
 nbformat>=5.9.0
