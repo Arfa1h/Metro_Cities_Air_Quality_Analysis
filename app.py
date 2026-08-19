@@ -36,10 +36,26 @@ st.markdown(f"""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     
+    /* Global App Background */
     .stApp {{
-        background-color: {THEME['main_bg']};
-        color: {THEME['text_primary']};
+        background-color: {THEME['main_bg']} !important;
+        color: {THEME['text_primary']} !important;
         font-family: 'Inter', sans-serif;
+    }}
+
+    /* Sidebar Background & Text */
+    section[data-testid="stSidebar"] {{
+        background-color: {THEME['card_bg']} !important;
+        border-right: 1px solid {THEME['border']} !important;
+    }}
+
+    section[data-testid="stSidebar"] *, section[data-testid="stSidebar"] label {{
+        color: {THEME['text_primary']} !important;
+    }}
+    
+    /* Header Background */
+    header[data-testid="stHeader"] {{
+        background-color: {THEME['main_bg']} !important;
     }}
     
     /* Card Container */
