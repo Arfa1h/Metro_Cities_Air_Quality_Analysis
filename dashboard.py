@@ -71,8 +71,6 @@ except Exception as e:
 # Dash App Initialization
 # -------------------------------------------------------------
 app = dash.Dash(__name__, title="AQI Analytics SaaS", suppress_callback_exceptions=True)
-server = app.server  # Expose Flask instance for Gunicorn / Cloud Deployment
-
 
 # -------------------------------------------------------------
 # Reusable Components
@@ -342,6 +340,4 @@ def update_dashboard(selected_cities, selected_year, selected_season):
     return insight_text, kpis, fig_main, fig_comp, fig_box, fig_donut, fig_event, fig_scatter
 
 if __name__ == '__main__':
-    port = int(os.environ.get("PORT", 8050))
-    app.run(host="0.0.0.0", port=port, debug=False)
-
+    app.run(debug=False, port=8050)
